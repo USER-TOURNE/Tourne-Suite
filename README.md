@@ -14,7 +14,7 @@ A work in progress: every way to theme Windows, from Windows 7 to the latest Win
 
 | Goal | Status |
 |---|---|
-| **StartAllBack, rebuilt from the ground up.** A classic taskbar and Windows 7 style Start menu that work with existing StartAllBack themes | In progress: our own taskbar runs in test mode (see below) |
+| **StartAllBack, built from the ground up nothing was stripped/reverse engineered from StartAllBack per its license.** A classic taskbar and Windows 7 style Start menu that work with existing StartAllBack themes | In progress: our own taskbar runs in test mode (see below) |
 | **Winaero Tweaker, built from the ground up nothing was stripped/reverse engineered from winaero per its license** | Done: 312 Windows settings as toggles |
 | **Window Switcher, built from the ground up** | Done: our own Alt+Tab with all its settings |
 | **A SecureUxTheme replacement**, for applying unsigned visual styles | COMPLETE |
