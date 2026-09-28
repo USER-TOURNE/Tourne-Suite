@@ -4,7 +4,7 @@ A work in progress: every way to theme Windows, from Windows 7 to the latest Win
 
 ![Desktop](images/01-desktop.png)
 
-## It starts from what you already have
+## It starts from what you already have. Every Theme is backwards compatible
 
 - **Your settings are the defaults.** Loading the suite doesn't change your Windows settings. It starts from what you already set, whether in Winaero Tweaker, StartAllBack, Simple Window Switcher or Windows itself. Where nothing was ever set, Windows' own value stays, or nothing is applied.
 - **Only what you change is applied**, and only when you change it. Each save applies the values that differ from before, nothing else.
@@ -22,7 +22,7 @@ A work in progress: every way to theme Windows, from Windows 7 to the latest Win
 
 ## What works today
 
-### Taskbar and tray
+### Taskbar and tray (95% done with the StartAllBack Replacement- Images currently dont reflect, will update soon)
 
 ![Taskbar](images/02-taskbar.png)
 
@@ -43,9 +43,9 @@ Every tray icon opens its own flyout in the same style, in the spirit of the Win
 |---|---|
 | ![Hidden icons](images/06-hidden-icons.png) | ![Device batteries](images/07-device-batteries.png) |
 
-There's also a power flyout with plans, brightness over DDC/CI, VPN (Windscribe), notifications with a calendar, Windows Security, and Bluetooth with connect and disconnect. Flyouts widen to fit their text automatically, up to a maximum you set.
+There's also a powerplan flyout with laptop powerplans (or if on a desktop, youll see your 2.4gz/dongle and bluetooth device battery %'s here), brightness over DDC/CI, VPN (Windscribe), notifications with a calendar, Windows Security, and Bluetooth with connect and disconnect. Flyouts widen to fit their text automatically, up to a maximum you set.
 
-### Device batteries
+### Device batteries (Device Support as needed, currently works with the most stubborn, even without their parent programs -> looking at YOU AWCC & Synapse)
 
 Wireless headsets, mice, keyboards and controllers report their battery right in the tray. It reads the level straight from the device, so no vendor app needs to be running. This is a port of HaloBattery (MIT) to C++.
 
@@ -54,9 +54,9 @@ Wireless headsets, mice, keyboards and controllers report their battery right in
 - **How often:** anywhere from every 5 seconds to every 24 hours (`30sec`, `9min`, `3hr`), and immediately when a device is plugged in or removed.
 - **Alerts:** a low battery alert that fires once and waits until the device has been charged before firing again.
 
-### Alt+Tab: the Switcher
+### Alt+Tab: the Switcher (95% complete)
 
-Our own window switcher, written from scratch, with every setting Simple Window Switcher has: a list or a grid, live thumbnails, macOS-style icon badges, acrylic, see-through backgrounds, rounded or square corners, fonts, grouping by app, colours for dark and light mode, and custom names and icons per program.
+Our own window switcher, written from scratch, with every setting a Switcher can have/has: a list or a grid, live thumbnails, macOS-style icon badges, acrylic, see-through backgrounds, rounded or square corners, fonts, grouping by app, colours for dark and light mode, and custom names and icons per program.
 
 It starts from what you already have. If you've used Simple Window Switcher, its colours carry over as they are; otherwise it takes your visual style's colours. There's also a **Style** dropdown with every theme you've installed, the suite's colour schemes, and **Tourne'Style**, the preset shown here.
 
@@ -117,10 +117,10 @@ It now runs beside StartAllBack's own taskbar while it's tested. Here it is with
 
 Coming up, in order:
 
-1. Progress bars on the buttons, and recent items in jump lists.
-2. Show desktop and the overflow chevron.
-3. The Windows 7 style Start menu.
-4. A switch that retires StartAllBack.
+1. Progress bars on the buttons, and recent items in jump lists. (already working)
+2. Show desktop and the overflow chevron. (implemented)
+3. The Windows 7 style Start menu, including custom styles. (done)
+4. A switch that retires StartAllBack. (WIP)
 
 ## Credits
 
