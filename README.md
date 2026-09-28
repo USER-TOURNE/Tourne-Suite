@@ -15,10 +15,10 @@ A work in progress: every way to theme Windows, from Windows 7 to the latest Win
 | Goal | Status |
 |---|---|
 | **StartAllBack, rebuilt from the ground up.** A classic taskbar and Windows 7 style Start menu that work with existing StartAllBack themes | In progress: our own taskbar runs in test mode (see below) |
-| **Winaero Tweaker, rebuilt from the ground up** | Done: 312 Windows settings as toggles |
-| **Simple Window Switcher, rebuilt from the ground up** | Done: our own Alt+Tab with all its settings |
-| **A SecureUxTheme replacement**, for applying unsigned visual styles | Planned |
-| **Various other modifications**: tray icons, flyouts, icon themes, device batteries and more | Working today, shown below |
+| **Winaero Tweaker, built from the ground up nothing was stripped/reverse engineered from winaero per its license** | Done: 312 Windows settings as toggles |
+| **Window Switcher, built from the ground up** | Done: our own Alt+Tab with all its settings |
+| **A SecureUxTheme replacement**, for applying unsigned visual styles | COMPLETE |
+| **Various other modifications**: tray icons, flyouts, icon themes, device batteries and more | Working today, Including BYO icons, Including Auto Theme Paletteing shown below |
 
 ## What works today
 
@@ -81,7 +81,7 @@ Hold Alt and press Tab as usual. Alt+\` goes backwards or lists only the current
 
 ### A tour of the settings
 
-Every part is a group on one Windhawk settings page. **[Watch the two-minute scroll through all of them](video/tourne-suite-settings-tour.mp4)** (no sound).
+Every part is a group on one Windhawk settings page. **[Watch the two-minute scroll through all of them](video/tourne-suite-settings-tour.mp4)** (no sound and outdated by over 200 individual options).
 
 ## In progress: our own taskbar and Start menu
 
@@ -93,7 +93,7 @@ The suite loads a StartAllBack `.msstyles` and draws every part of it through Wi
 
 ![StartAllBack theme reader](images/09-sab-theme-reader.png)
 
-### Our taskbar, in test mode
+### Our taskbar, in test mode but pretty much complete 1:1 stand in with better options for user choice
 
 It now runs beside StartAllBack's own taskbar while it's tested. Here it is with the Everforest SAB theme:
 
