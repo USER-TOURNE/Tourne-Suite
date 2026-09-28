@@ -4,12 +4,19 @@ A work in progress: every way to theme Windows, from Windows 7 to the latest Win
 
 ![Desktop](images/01-desktop.png)
 
+## It starts from what you already have
+
+- **Your settings are the defaults.** Loading the suite doesn't change your Windows settings. It starts from what you already set, whether in Winaero Tweaker, StartAllBack, Simple Window Switcher or Windows itself. Where nothing was ever set, Windows' own value stays, or nothing is applied.
+- **Only what you change is applied**, and only when you change it. Each save applies the values that differ from before, nothing else.
+- **It themes itself to your visual style.** Everything the suite draws on its own (the taskbar, its menus and tooltips, the Alt+Tab switcher) follows the `.msstyles` you use and its colours, unless you already have colours of your own set somewhere, like Simple Window Switcher's. Change your theme and they change with it.
+
 ## Goals
 
 | Goal | Status |
 |---|---|
-| **StartAllBack, rebuilt from the ground up.** A classic taskbar and Windows 7 style Start menu that work with existing StartAllBack themes | In progress: the theme reader works (see below) |
+| **StartAllBack, rebuilt from the ground up.** A classic taskbar and Windows 7 style Start menu that work with existing StartAllBack themes | In progress: our own taskbar runs in test mode (see below) |
 | **Winaero Tweaker, rebuilt from the ground up** | Done: 312 Windows settings as toggles |
+| **Simple Window Switcher, rebuilt from the ground up** | Done: our own Alt+Tab with all its settings |
 | **A SecureUxTheme replacement**, for applying unsigned visual styles | Planned |
 | **Various other modifications**: tray icons, flyouts, icon themes, device batteries and more | Working today, shown below |
 
@@ -47,10 +54,26 @@ Wireless headsets, mice, keyboards and controllers report their battery right in
 - **How often:** anywhere from every 5 seconds to every 24 hours (`30sec`, `9min`, `3hr`), and immediately when a device is plugged in or removed.
 - **Alerts:** a low battery alert that fires once and waits until the device has been charged before firing again.
 
+### Alt+Tab: the Switcher
+
+Our own window switcher, written from scratch, with every setting Simple Window Switcher has: a list or a grid, live thumbnails, macOS-style icon badges, acrylic, see-through backgrounds, rounded or square corners, fonts, grouping by app, colours for dark and light mode, and custom names and icons per program.
+
+It starts from what you already have. If you've used Simple Window Switcher, its colours carry over as they are; otherwise it takes your visual style's colours. There's also a **Style** dropdown with every theme you've installed, the suite's colour schemes, and **Tourne'Style**, the preset shown here.
+
+| Tourne'Style | Grid with icons | Light mode |
+|---|---|---|
+| ![Switcher](images/14-switcher.png) | ![Switcher grid](images/15-switcher-grid.png) | ![Switcher in light mode](images/17-switcher-light.png) |
+
+With thumbnails, badges and acrylic:
+
+![Switcher with thumbnails](images/16-switcher-thumbnails.png)
+
+Hold Alt and press Tab as usual. Alt+\` goes backwards or lists only the current app's windows, a Ctrl tap opens an app's entry into its windows, Q or Delete closes one, and Alt+Ctrl+Tab keeps the list open.
+
 ### Everything else
 
 - **Icon Redirect.** An icon theme engine written from scratch (MIT), which replaces the Resource Redirect mod. It applies system-wide icon themes and single-app icon swaps.
-- **Tweaks.** 312 Windows settings as toggles (Explorer, the desktop, menus, power, privacy and more), applied live where Windows allows it.
+- **Tweaks.** 312 Windows settings as toggles (Explorer, the desktop, menus, power, privacy and more), applied live where Windows allows it. Turning it on changes nothing: it starts from your PC's current settings, and only the ones you change are applied.
 - **Text and menus.** A custom system text colour (including Chrome's menus), and context menus without icons and without duplicate entries.
 - **Tourne'Table.** The audio visualizer next to the Start orb.
 
@@ -66,20 +89,42 @@ Every part is a group on one Windhawk settings page. **[Watch the two-minute scr
 
 The taskbar and Start menu above are StartAllBack's, styled with the Bouquet SAB theme. The next big piece is our own classic taskbar and Windows 7 style Start menu inside the suite, **drawn straight from StartAllBack themes**, so the themes people already use keep working without StartAllBack.
 
-Step one works. The suite can now load a StartAllBack `.msstyles` and draw every part of it through Windows' own theme engine. Here are the Bouquet SAB taskbar buttons in all their states, plus the progress bar colours and the separators, drawn without StartAllBack running:
+The suite loads a StartAllBack `.msstyles` and draws every part of it through Windows' own theme engine. Here are the Bouquet SAB taskbar buttons in all their states, plus the progress bar colours and the separators, drawn without StartAllBack running:
 
 ![StartAllBack theme reader](images/09-sab-theme-reader.png)
 
+### Our taskbar, in test mode
+
+It now runs beside StartAllBack's own taskbar while it's tested. Here it is with the Everforest SAB theme:
+
+![Our taskbar](images/10-our-taskbar.png)
+
+- **Buttons** grouped and ordered the way StartAllBack does it, with the same icons (icon themes included), your pinned apps, and flashing for windows that want attention.
+- **The tray** with every icon, placed where you put them, and the clock drawn from the Clock part's settings. Scrolling the volume or brightness icon updates it live.
+- **Menus and tooltips** in your theme's own style, or the colour scheme's. They follow when your theme changes.
+- **Segments:** the bar can float as up to three islands, with the desktop showing between them.
+- **Its theme and orb follow StartAllBack's settings** unless you pick others. Themes can also come from `%LOCALAPPDATA%\Tourne\Styles`, so it works without StartAllBack installed.
+
+**Jump lists.** Right-click a button for the app's tasks, the app itself, pin or unpin, and close. Right-click the app in there for its own Windows menu, with Properties to change its icon:
+
+| Jump list | The app's own menu |
+|---|---|
+| ![Jump list](images/11-jump-list.png) | ![The app's menu in the jump list](images/12-jump-list-app-menu.png) |
+
+**Window previews.** Rest on a button for live thumbnails of its windows. Click one to switch to it, middle-click to close it, or right-click for its window menu:
+
+![Window preview](images/13-window-preview.png)
+
 Coming up, in order:
 
-1. A test-mode taskbar that runs alongside StartAllBack.
-2. Grouping, pinned apps, jump lists, thumbnails, the clock and show desktop.
-3. Tray icon hosting.
-4. The Windows 7 style Start menu.
-5. A switch that retires StartAllBack.
+1. Progress bars on the buttons, and recent items in jump lists.
+2. Show desktop and the overflow chevron.
+3. The Windows 7 style Start menu.
+4. A switch that retires StartAllBack.
 
 ## Credits
 
 - [Windhawk](https://windhawk.net/), which everything runs on.
-- The **Bouquet** icon and StartAllBack theme by **niivu**.
+- The **Bouquet** icon and StartAllBack theme, and the **Everforest** theme, by **niivu**.
 - **HaloBattery** (MIT), whose device protocols the battery reader is ported from.
+- **Simple Window Switcher** (valinet's sws, and its Windhawk port by Lone), whose settings the Switcher offers. The Switcher's code is our own.
