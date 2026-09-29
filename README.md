@@ -103,7 +103,12 @@ It now runs beside StartAllBack's own taskbar while it's tested. Here it is with
 - **The tray** with every icon, placed where you put them, and the clock drawn from the Clock part's settings. Scrolling the volume or brightness icon updates it live.
 - **Menus and tooltips** in your theme's own style, or the colour scheme's. They follow when your theme changes.
 - **Segments:** the bar can float as up to three islands, with the desktop showing between them.
-- **Its theme and orb follow StartAllBack's settings** unless you pick others. Themes can also come from `%LOCALAPPDATA%\Tourne\Styles`, so it works without StartAllBack installed.
+- **Its theme and orb follow StartAllBack's settings** unless you pick others, and reload live when they change. Themes can also come from `%LOCALAPPDATA%\Tourne\Styles`, so it works without StartAllBack installed.
+- **A bar on every screen.** Other screens get their own bar with their windows and a clock, following Windows' "Show taskbar buttons on".
+- **Hot reload and one-step install.** Save a theme and the bar redraws. Drop a `.msstyles`, an orb, a folder or a `.zip` on the bar to install it.
+- **YASB themes.** Pick one of the community's YASB themes (a `styles.css` and `config.yaml`) and the bar is drawn from it: its look, blur, layout and widgets, with our task buttons, tray, clock and Start button in its boxes. Drop a theme's folder or `.zip` on the bar to install it, or use *Get a YASB theme...* in the bar's menu to list and install themes from [yasb.dev/themes](https://yasb.dev/themes) (the [amnweb/yasb-themes](https://github.com/amnweb/yasb-themes) repository), or paste a link to one. Nothing is downloaded until you press a button.
+- **Grouped windows** are drawn as a stack with the theme's own stack parts, and a click brings up the last window you used.
+- **Fast.** Menus, jump lists and the Start menu are cached and repainted only where they changed, with Windows' own fades off.
 
 **Jump lists.** Right-click a button for the app's tasks, the app itself, pin or unpin, and close. Right-click the app in there for its own Windows menu, with Properties to change its icon:
 
@@ -115,9 +120,21 @@ It now runs beside StartAllBack's own taskbar while it's tested. Here it is with
 
 ![Window preview](images/13-window-preview.png)
 
+### Devlog
+
+The latest stretch (builds b8 to b18) is written up in **[DEVLOG.md](DEVLOG.md)**: how ours is checked against StartAllBack, the speed work, the menu frames and stacked windows, and the newest build with a bar per screen, hot reload, theme install and the glow fade.
+
+| Ours against StartAllBack | A bar on every screen |
+|---|---|
+| ![Ours against StartAllBack](images/18-parity-bouquet.png) | ![The bars of three screens](images/23-multi-monitor.png) |
+
+| Flyout menu | Stacked windows, from the theme |
+|---|---|
+| ![Flyout menu](images/20-flyout-menu.png) | ![Stack edge parts](images/21-stack-edge.png) |
+
 Coming up, in order:
 
-1. Progress bars on the buttons, and recent items in jump lists. (already working)
+1. Progress bars on the buttons, and recent items in jump lists. (recent items working, progress bars next)
 2. Show desktop and the overflow chevron. (implemented)
 3. The Windows 7 style Start menu, including custom styles. (done)
 4. A switch that retires StartAllBack. (WIP)
