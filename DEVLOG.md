@@ -148,3 +148,137 @@ Because a theme is someone else's file, its commands still stay off unless *Let 
 - Progress bars on the buttons (parts 9 to 12).
 - SVG and `.orb` orbs.
 - Explorer restyling when SAB is off.
+
+## b21: smoother dynamic shyness
+
+- **Slides and fades instead of jumping.** The bar used to snap between shown and away. Now Windows' compositor moves and fades the finished bar (no redraw per frame), with frames timed to the screen's refresh: 6.9 ms apart on a 144 Hz screen in the test bar. When it turns back halfway, it continues from where it is.
+- **New settings:** Hiding animation (Slide, Fade, Slide and fade, None); Smoothing (Smooth, Soft landing, Gentle, Off); Animation length; Hide delay; Return delay; While hidden (a sliver of the bar like StartAllBack, a soft glow in the accent colour, or nothing), with glow strength and depth.
+- **Less flicker.** Windows have to stay clear for the return delay before the bar comes back, and nothing changes while a window is being dragged or resized. Moving the pointer to the screen's edge still brings it back at once.
+- **Hidden means out of the way.** While away, the bar ignores clicks, and the blur is turned off under a fading bar or the glow.
+- Blurring the bar as it moves (motion blur) was left out. It needs the whole bar redrawn every frame, which costs CPU; moving and fading cost nothing.
+- The animation ignores Windows' "Animation effects" setting, since many people turn that off for Windows' own animations. Use None to turn it off.
+
+## b22: progress on buttons, a crash guard, tidier settings
+
+- **Progress bars on task buttons.** Downloads, copies and installers now show their progress on their button, drawn with the style's own progress parts (normal, busy, error, paused). A probe of Windows' own code showed where apps send it: to Explorer's task switcher window, as a state and a value from 0 to 65535. The suite's Explorer side catches it there and passes it to our bar. Busy progress sweeps across the button; that animation runs only while something is busy. Without a style, the colour scheme's accent is used (warning colour for errors).
+- **Not yet matched to StartAllBack.** SAB's styles hold thin 42x5 progress strips, and niivu's full Everforest style holds full-button 27x26 ones, so where SAB puts the strip on a button still has to be photographed. The tool for that is ready; it needs an unlocked screen.
+- **Crash guard.** If Explorer ends three times within two minutes of starting, the suite stops loading its parts into Explorer and says so on the taskbar. Saving any suite setting lets them back in. Folder windows running in their own Explorer process don't count. It costs one registry read and write when Explorer starts.
+- **Safe Mode.** The suite doesn't load at all in Safe Mode.
+- **Settings of a part that's off are hidden** (Windhawk 2.0). Each part's options show only while its Enabled switch is on. Windhawk 1.7.3 still installs the build and shows everything.
+- The Explorer side now also runs for the taskbar alone (for progress), without System Icons' Explorer work when System Icons is off.
+- The test bar can now save the frame it drew without reading the screen, so tests work while the PC is locked.
+
+## Research: what a visual style fills in, and what it leaves out
+
+Every class, part, state and property of 14 styles was dumped with msstyleEditor's own library: Windows' aero and aerolite, Windows 7, Plain8, niivu's Bouquet family (Bouquet, Night, MAC Dark, MAC Night, Bouquet SAB), Everforest Night and Everforest SAB, and the one in use here. Each was compared with aero value by value, with images compared by their decoded pixels. The full map is `research/msstyles/MSSTYLES-MAP.md` in the working folder.
+
+- **Missing usually means inherited.** uxtheme fills a missing value from the part, then the class, then the style's globals, and a missing `App::Class` falls back to the plain class. This was checked against uxtheme itself, not assumed. niivu leaves scroll arrows, combo box dropdown backgrounds and the navigation sizer blank on purpose.
+- **What's really left behind** is Windows' accent blue in a few places even finished styles don't repaint: the calendar's cells, dark Explorer's property text and fills, the command bar's split buttons, and dark list expanders. Task Manager's colours are data colours and stay.
+- **A style's system colours hold its whole palette.** Bouquet SAB is Plain8 repainted (it kept Plain8's preview and tray arrow images). Everforest SAB is a full style plus the SAB classes. Bouquet and Bouquet MAC differ only in the window frame.
+
+## b24: the style's own tray parts, and its palette
+
+(b23, a SecureUxTheme build, was skipped.)
+
+![Tray end with Bouquet SAB: at rest, arrow hovered, clock hovered, show desktop hovered and pressed](images/28-sab-tray-parts.png)
+
+- **The show-hidden-icons arrow** is the style's own (`TrayNotifyHoriz::Button` and its Vert and Open variants), lit when pointed at or pressed. It flips to the Open arrow while the overflow flyout is up.
+- **Clock and tray icon hovers** use `TrayNotify::Clock` and `TrayNotify::Toolbar`, as SAB does. The clock's text colour comes from the style too.
+- **Show desktop button** at the far end (`ShowDesktop::Button`), sized by the style (10 px in Bouquet SAB, 14 in Windows 7). Clicking it sends Win+D. New setting *Show desktop button*: as Windows is set (the default, Windows' own "show desktop" switch), always or never. **It will appear on this PC**, since that switch is on here, as it does in SAB.
+- **Thumbnail previews** are drawn with `TaskbandExtendedUI`: the popup's background, the hovered and flashing window, and the close button. Which part and state is which was worked out from the images; SAB's own previews haven't been compared side by side yet.
+
+  ![Preview popup with Bouquet SAB's parts](images/29-sab-preview.png)
+
+- **Only when the style has them.** A class that only falls back to Windows' plain one (compared by its pixels) is ignored, so styles without SAB's classes keep the old look. Checked: the style in use here, aero and Bouquet MAC Night draw as before; Bouquet SAB, Everforest SAB and Windows 7 get every part.
+- **Palette from the style's system colours.** The flat colour scheme taken from a style now starts from its own menu, text, border and grey text colours before the menu's pictures are measured. For the style in use here and every Night style, the palette is unchanged. The light-menu styles (Bouquet Dark and Medium, aero) get a readable faint-text colour, the style's own grey instead of a near-white mix.
+- **Windows' blue left in the style** (Theme Gaps, off by default): swaps the accent blues listed in the research for the style's own highlight colour (a darker mix of it for fills). Off, it costs nothing: the hook isn't even put in.
+- Nothing forces title bar colours or changes Windows' system colours.
+- The test bar's saved frames were upside down (GetObject reports a top-down picture's height as positive), and its preview test never opened a preview. Both fixed.
+
+## b25: Explorer in your colours, and the Windows logo from a folder
+
+### Explorer Colours (new part, off until switched on)
+
+The idea comes from VitalS's [Explorer Visual Tweaks Dark](https://windhawk.net/mods/explorer-visual-tweaks-dark): catch the few theme parts Explorer draws its drive bars, selections and preview pane with, and draw them in your colours. That mod replaces the drive bar with its own rounded gradient, which throws away a style's shape (like the pixel segments here). This part keeps it.
+
+![Drive bars and selections from the style in use here: its own, recoloured, recoloured with a fade and a recoloured empty part, flat; then selections and the focus pill](images/31-explorer-colours.png)
+
+- **Drive bars, three ways.** The style's own; *the style's shape in your colours*; or flat bars (rounding, border, fade). A recoloured bar is the style's own picture drawn aside and remapped by brightness, so its most common colour becomes exactly yours and every segment, gap and shade stays. Separate colours for the filled part, a nearly full drive and the empty part, each with an optional second colour to fade to, and each left as the style's own when empty.
+- **Selections** in the file list and the navigation pane (either or both): pointed at, selected, and (new) selected in a window that isn't active, each with its own fill and border; border width 0 to 3 and corner rounding 0 to 6; the navigation pane's focus pill with its own colour and (new) width.
+- **Preview pane** background, and plain-text previews, in your colour, with (new) a text colour of your own or one picked to suit.
+- **Also in these programs:** their Open and Save dialogs get the same selections and bars.
+- **Any colour can be `accent`**, the visual style's highlight.
+- **Cost.** Nothing is hooked unless something is on, and each hook checks a part and state number first, then one flag, before it looks at the class. A recoloured bar is two small draws and a pass over its pixels (a drive bar is a few thousand), only when a drive bar is painted.
+- Colours start as the ones set in Explorer Visual Tweaks Dark here. Switch the part and the blocks on to use them.
+- Checked outside Explorer against the style in use here (`tools/compare/colortest.cpp`). Not yet seen inside Explorer itself.
+
+### Windows branding pictures (Icon Redirect)
+
+![The logo from BrandingLoadImage, redirected: the three WINDux sizes, then an .svg drawn at 573x90](images/30-branding.png)
+
+- **Folders of pictures.** A redirect's replacement can now be a folder of pictures named by resource id (`123.png`, `1123.bmp`, `2123.svg`). They stand in for that file's IMAGE, PNG and BITMAP resources. PNGs are used as they are; anything else is converted once, the first time it's asked for, and an .svg is drawn by Windows' own SVG renderer at the size of the picture it replaces. Ids the folder doesn't have stay Windows' own.
+- **Windows branding pictures**, one setting: a folder for `Branding\Basebrd\basebrd.dll`, whose 123, 1123 and 2123 are the logo in About Windows (winver), the shut down dialog and System at their three sizes, the ids niivu's packs use. No system file is changed.
+- **How it was checked.** `tools/basebrd/brandtest.cpp` compiles Icon Redirect into a test program, points winbrand.dll's own resource calls at its hooks, and asks `BrandingLoadImage` for the logo, which is what winver does. PNG, BMP and SVG all came back at the right sizes.
+- **Cost.** Nothing new is hooked (Icon Redirect already reads resources); WIC and Direct2D are loaded only if a .bmp or .svg has to be converted, and never while a DLL is loading.
+
+
+## b26: a quicker start, and a bar that stays out of the way
+
+Measured in the test bar (warm disk, 3 screens) with timings built into the taskbar; `%LOCALAPPDATA%\Tourne\startup.txt` now logs the same steps on every real start.
+
+### Starting up
+
+- **The rest of the suite no longer waits for the taskbar.** It waited for the whole first setup (650 to 1400 ms); now it waits for the bar's window only (about 12 ms), and the bar sets itself up once its hooks are in.
+- **Icons are read once at startup**, not twice (the second read came from a message that arrived after setup).
+- **The programs list is read once at startup**, not twice (about 190 ms of background work saved).
+- **Not in the lock screen.** The suite no longer loads into LockApp and LogonUI at all.
+
+### The Start menu
+
+| | b25 | b26 |
+|---|---|---|
+| First open after starting | 190 to 216 ms | about 30 ms |
+| Every later open | 21 to 26 ms | about 9 ms |
+| First open after a screen change | as slow as the first | about 9 ms |
+
+- **Warmed while closed.** The home list, places, their icons and the right-click menus are made on low-priority threads a few seconds after starting (and after any settings change), so the first open is as quick as the rest.
+- **A programs list that didn't change no longer throws the home list away.**
+- **Open on press** (on): opens the moment the Start button goes down, as a menu does, instead of when it's let go.
+
+### Screens, sleep and wake
+
+- **Screen changes are gathered up** (a second's wait for waking screens to settle) and redo only the bars' placement, keeping the fonts, style and Start caches: 26 ms instead of a full reload.
+- **Theme and colour notices that change nothing are ignored.** Windows sends several on wake; each used to reload everything.
+- **Choices are written once**, not 60 times per reload.
+
+### Tooltips and the aura
+
+- **Tooltips:** by the pointer (Windows' place) or beside the bar, centred on the button; moved away from the bar or along it by any number of pixels; their own delay; and closed the moment a preview opens so they never sit over it.
+- **The dynamic aura follows at the screen's refresh rate** instead of 15 ms steps, with a *trail* (0 sticks to the pointer; more is a smooth catch-up, as a half-life in ms), plus *size* (40 to 300 %) and *strength* (0 to 300 %) for the Aura style.
+- **Cost.** A redraw with the aura following is 0.5 ms, the same as without; the pacer stops when the aura has arrived.
+
+### Window previews, your way
+
+- **How they open:** on resting on a button (as before), on resting on groups only, or only on a click. Ctrl+click now opens any running button's previews, not only a group's. While they're up, moving to another button moves them there.
+- **Where:** on the button (as before) or on the pointer, then moved away from the bar or along it by any number of pixels.
+- **How long they stay:** until the pointer leaves (after a delay you set, 300 ms as before), or **until dismissed**, in the ways you pick: a click elsewhere, another window coming to the front (not one of theirs), Esc (taken, as a menu takes it), any key (passed on), or a time away. Each can be on or off.
+- **After picking a window:** close them (as before), or keep them up to flip between windows.
+- **Cost.** The click and key watchers are only in while previews kept until dismissed are up; otherwise nothing is added.
+- Checked in the test bar: the offsets and pointer placement land where expected, and the watchers go in and out with the previews.
+
+### Frames and stacks, as StartAllBack draws them
+
+![Ours (top) and StartAllBack (bottom) with Bouquet SAB, 8x: square frames with their dark outer rows, and a stack's edges as straight lines](images/32-frames-and-stacks.png)
+
+- **The dark outer layer is back.** The colour scheme swaps its tint in for whatever is still the bar's background, and it found that by colour alone. Bouquet's frame border is exactly the bar's colour there, so the frame's two dark outer rows were taken for background and tinted away, leaving the light line at the edge. Drawn pixels are now told apart by alpha as well.
+- **Square frames.** Frames are 4 px in from both sides of the bar (30 px on a 38 px bar), as StartAllBack's are, not 28. With the dark rows back, a frame now matches StartAllBack's pixel for pixel.
+- **Stacks.** A group's edge is the style's own picture at its own width, right against the frame, as tall as the frame, and one straight line: StartAllBack leaves out the picture's little top and bottom caps, which showed here as hooks. The next button starts right after it (5 px for two windows, 8 for more, read from the picture). Before, it was squeezed to 6 px, so a stack of three or more ran its two edges together.
+- **Cost.** Nothing measurable: a redraw is still about 0.5 ms.
+### Settings folded at first
+
+Windhawk 2.0 alpha 6 has no way for a mod to ask for folded groups. It remembers what you fold per mod id, and each build here has its own id, so every new build opens unfolded.
+### Does switching a part off unload it?
+
+- A part that's off has no hooks: they're removed when the suite reloads. Where no part is on at all, the suite asks Windhawk to unload it from that program.
+- Where it is loaded, it costs about 75 KB of private memory per program, plus about 350 KB shared by all of them (the 3.3 MB DLL is mapped once).
+- Programs that can't be unloaded into (sandboxed browsers, suspended apps) keep an old build until they close.
