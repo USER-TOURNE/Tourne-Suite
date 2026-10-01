@@ -446,3 +446,150 @@ Explorer Style now does the same for both panes, only when the minimum is what h
 - Moving a kept window updates its place. Shift+W+Space puts it back in the tiling and forgets the place.
 - It works with automatic tiling off too, so Shift+W+Tab doesn't pull it back either. Dragging a tiled window without resizing it still swaps it with the one it's dropped on.
 - New setting under Window tiling: **Leave a window you resize where you put it**, on.
+
+## b38: window layouts, every window's place remembered, and the pane goes narrower
+
+**The pane.** b37's fix works, but it stopped at 100 px. The probe showed one long drag reaching that floor straight away, after which the pane wouldn't go narrower and seemed broken. The floor is now 24 px. Repeated drags in a window of its own process, in one the shell opens, with a picture previewing, and across three windows in a row (each opening at the width the last left) all shrank.
+
+**Remember where every window closed** (Window tiling, on). Every window with a title bar or a resizing border is followed while it's open: programs' windows, dialogs and tool windows. Its place is saved when it closes, or hides, as programs that close to the tray do.
+- The next window of its kind opens there, and maximised again if it closed maximised. A kind is the program and window class, and for dialogs the title too, as one program has many.
+- The tiling still places the windows it tiles, and a place kept by resizing a window by hand comes first.
+- Places are written two seconds after a window closes, once for a burst, and only the 256 most recent are kept.
+
+**Window layouts** (Shift+W+M). A layout is each screen's tiling layout, plus each window's place and whether it's tiled, saved under a name.
+- **Save current as new** takes the windows open now. **Update from windows** retakes the chosen one.
+- **Apply** puts the open windows back: each line takes the first window of its program not taken yet, and the tiled ones go back in their order.
+- A layout is plain text, one line per screen or window, and can be edited, renamed and saved in the window. **Delete** asks first.
+- Shift+W and 1 to 9 apply the first nine layouts without opening the window.
+
+![The Window layouts window](images/38-window-layouts.png)
+
+Checked outside Windhawk (`tools/tiling/lytest.cpp`, with two see-through test windows in a separate process):
+- A layout taken, the windows moved away and the layout applied: both went back.
+- A window closed at one place and a new one of its kind opened elsewhere: it was moved to where the last one closed.
+- Two layouts were saved and one renamed.
+
+The first run used resizable test windows, so the live b37 tiler tiled them. The test windows are now fixed size, which it leaves alone.
+
+## b39: one icon for a program, everywhere
+
+The ask: Process Lasso, every part of NVIDIA, and Discord (launched through the Vencord shortcut, from a folder that changes with every update) each with one icon in every place Windows shows one. The NVIDIA Settings tray icon kept going back to NVIDIA's own.
+
+**Why they slipped.**
+- The Icon Redirect rows for Discord had a `*` in front of the replacement file, which turned it into a path that led nowhere. The same was true of the two InputSwitch rows.
+- Discord's rows named `app-1.0.9260`, and NVIDIA's named one driver store folder. Discord's updates and NVIDIA's driver updates move both.
+- The tray swaps other programs' icons as they arrive. Anything it doesn't recognise keeps the program's own icon.
+
+**Use everywhere.** The taskbar's Button icons rows get a "Use everywhere" switch, and their program can hold `*` and `?`, like `*\NVIDIA Corporation\*.exe`. One marked row now drives everything:
+- **The taskbar buttons**, as before.
+- **The tray:** the row's icon wins over the tray's own designs.
+- **Alt+Tab.**
+- **Icon Redirect,** which puts the .ico wherever Windows reads the icon from the program's file: Explorer, Start, its windows. A plain file name matches in any folder, so updates can't lose it.
+
+Rows that already existed stay off, so nothing else changes. b39's defaults add rows for:
+- **Discord:** `Discord.exe`, `*\Discord\*.exe`, `*\Discord\app.ico` and its app id.
+- **NVIDIA:** `*\NVIDIA Corporation\*.exe`, `*\Display.NvContainer\*.exe`, `nvcplui.exe`, and the NVIDIA App and Control Panel app ids.
+- **Process Lasso:** `*\Process Lasso\*.exe`.
+
+**The icons.** They're drawn by `Make-PixelIcons.ps1`, exactly as the tray draws its art: the ink green, coral accents, one-pixel shade, and whole-number scales from 16 to 256 px. Redrawing the Discord icon with it matched the original pixel for pixel. NVIDIA is an eye with a coral pupil, and Process Lasso is a lasso with a coral knot.
+
+![NVIDIA and Process Lasso](images/39-program-icons.png)
+
+**Known limits:**
+- The Start menu's tile for the NVIDIA Control Panel is a packaged app's own picture, which nothing here replaces. Its taskbar button and Alt+Tab do change.
+- Explorer may keep old icons in its cache until it restarts.
+
+## b40: a desktops pager, and tray icons that stay themed
+
+The ask: a way to see and reach the desktops Win+Tab makes, from the taskbar. It should move along the bar, come off it to sit anywhere on the screen, lock in place, and change its look from a right-click menu. Also, NVIDIA Settings was still showing its own tray icon.
+
+**The pager.** It shows a mark for each desktop, and the one you're on is lit in the accent colour.
+- **Click** a mark to go to that desktop. **Scroll** over it to step through them. It switches with Ctrl+Win+Left and Right, the same way Windows does.
+- **Docking:** it can sit before the tray (the default), after Start, or after the clock. It takes its own room on the bar, so the buttons move over. With segments, it shares an island with the tray or with Start.
+- **Floating:** drag it off the bar and it floats anywhere on the screen, on every desktop. While it's over the bar it turns see-through, and letting go there docks it at the nearest of its three places.
+- **Right-click** it for:
+  - Lock in place.
+  - Its look: dots, numbers, or the names Task view gives them.
+  - Where it goes, and whether a floating pager stays on top.
+  - Hide it when there's only one desktop.
+  - Task view, a new desktop, or closing the one you're on.
+
+The desktops come from Explorer's own registry, which the bar already watched for YASB themes' workspace buttons, so changes show at once without polling. Your pager choices are kept beside the tray's, in `HKCU\Software\TourneTray`. It's in the taskbar settings as "Desktops pager", and it's on.
+
+**NVIDIA Settings' tray icon.** The tray swaps a program's icon as it arrives. NVIDIA's arrived before anything could swap it, and nothing ever looked at it again. Now every icon the tray holds remembers whether it's themed. The relay's existing 10 s pass themes any that aren't. An icon with nothing to theme it is tried a few times, then left alone until its program sends a new one.
+
+**Known limits:**
+- Clicking a mark several desktops away steps through each one in between, as the keys do.
+- On a vertical bar, the names look shows numbers.
+
+## b41: scans from the security flyout, and a pager that really floats
+
+The ask: run a scan from our Windows Security flyout. Also, let the desktops pager truly float, so it doesn't attach itself when it's over the taskbar, and give it options for size, shape, colours, fade and opacity.
+
+**Scanning.** The flyout has **Quick scan** and **Full scan** under the last scan's time.
+- It uses Defender's own command line (`MpCmdRun`), with no window. Defender's service does the scanning; we only wait for it to finish.
+- The wait runs on its own thread, so you can close the flyout. Reopen it and you'll see how long the scan has been running.
+- The tray icon gets a dot while a scan runs, and its tooltip says which kind of scan.
+- When it's done, the flyout says "no threats" or "threats found", and the last-scan time updates.
+- If Windows asks for an administrator, the flyout offers **Scan as admin**, which runs the same scan through the UAC prompt.
+- Unloading the suite only stops the waiting. The scan itself carries on in Defender.
+
+**Floating that stays floating.**
+- A floating pager stays where you let go of it, over the taskbar too. It's never pushed off the bar's part of the screen any more.
+- It docks only when you pick a place on the bar from its menu, or when you carry it off the bar and drop it back on.
+- With "Keep on top" on, the bar owns it, so it always sits above the bar.
+
+**Its look:** a new "Desktops pager look" group in the taskbar settings.
+- **Marks:** size, spacing, and shape: pixel dot, square, circle, diamond, pill (the desktop showing is a wide pill) or bar.
+- **Outline:** an outer colour ring around each mark, with the inner colour inside.
+- **Colours:** from the colour scheme, or custom ones for the marks, the desktop showing, and the floating panel and its edge.
+- **Floating only:** the panel's shape (rounded, square, pill or none), the panel's opacity, the whole pager's opacity, a fade when the pointer leaves it (how faint, and after how long), and running top to bottom.
+- Shapes are smoothed. Text on a see-through panel keeps its own edges, so names stay crisp with no panel behind them.
+- The right-click menu adds "Size, shape and colours...", which opens Windhawk.
+
+The defaults draw it exactly as b40 did.
+
+## b42: Explorer stops crashing, tooltips hold still, classic menus everywhere
+
+The ask: find out why Explorer kept crashing and why the tooltips flickered (from a screen recording), and fix both. Also, a better way to turn off Windows' "immersive" menus.
+
+**The crashes.** Explorer had crashed 11 times since 2026-09-29, and never before that. Every crash was in Windows 11's own taskbar, which is built with XAML.
+- Turning StartAllBack off brings that taskbar back to life inside Explorer, and we were keeping it hidden in two ways it can't cope with:
+  - We cloaked it, then answered "done" when Explorer tried to uncloak it.
+  - Our taskbar process kept hiding its window from outside.
+- The crash dumps fit: the failure always came inside the taskbar's own code, on the thread that runs it.
+
+**How it's hidden now.** It's the approach of m417z's "Taskbar auto-hide fine tuning" mod, which hides that same taskbar without trouble:
+- Windows' own auto-hide is on, so Explorer itself has the taskbar hidden away.
+- Everything that would bring it back is turned away before it starts:
+  - notifications and the Windows key asking it to unhide,
+  - the timer that slides it in when the pointer rests at the edge,
+  - Windows 11's "should it be expanded" check, and the pointer or a swipe at the edge.
+- Only once Explorer has hidden it is it cloaked, so not even its sliver shows. That's done on the taskbar's own thread, and Explorer's own cloaking and uncloaking go through untouched.
+- Its window is never hidden from outside any more. A taskbar an older build hid gets shown again.
+
+**Tooltips.** Every second, a tray icon's tooltip changing (the CPU temperature, say) made our bar refresh whichever tooltip was showing. Each refresh put it on top of the bar for one frame before it jumped back.
+- Now only the tooltip you're looking at refreshes, and only when its own text changes.
+- The tooltip can no longer land anywhere but its place above the bar.
+
+**Classic Menus (new part).** Windows draws some of its own menus as "immersive" ones. Each part of the shell carries its own copy of the code that does that.
+- I looked through every Windows file for that code. It's in 12 64-bit and 6 32-bit files on this Windows.
+- The usual mod's list predates Windows 11 24H2, so it misses:
+  - the taskbar (moved into Taskbar.dll),
+  - the keyboard language menu,
+  - Windows Security's renamed tray module,
+  - File Explorer's new parts,
+  - Task Manager,
+  - Store apps' title bars.
+- Ours covers them all, and hooks each file as it loads instead of loading it into every program.
+- On 32-bit programs it uses the same calling convention Windows does, which the usual mod gets wrong.
+- Switches cover Explorer and file dialogs, the taskbar, tray icons, and Windows' programs. The "Taskbar settings" gear is left off.
+
+## b43: desktop previews
+
+**Previews of your virtual desktops.** Point at a pager mark, on the bar or floating, and after a moment a preview of that desktop opens beside it.
+- It shows the desktop's own wallpaper (or the main one), its windows in their real places, and its name.
+- The windows are live, as Task view shows them, straight from Windows' compositor. Windows on other desktops keep their pictures there even while hidden.
+- Sliding along the marks swaps the preview at once. Clicking, dragging, the menu or leaving the pager closes it.
+- Nothing runs while no preview is open.
+- Two new settings under "Desktops pager look": the previews themselves (on) and their width (280 px at 100%). With previews on, the mark's tooltip steps aside, since the preview names the desktop.
