@@ -274,6 +274,56 @@ Measured in the test bar (warm disk, 3 screens) with timings built into the task
 - **Square frames.** Frames are 4 px in from both sides of the bar (30 px on a 38 px bar), as StartAllBack's are, not 28. With the dark rows back, a frame now matches StartAllBack's pixel for pixel.
 - **Stacks.** A group's edge is the style's own picture at its own width, right against the frame, as tall as the frame, and one straight line: StartAllBack leaves out the picture's little top and bottom caps, which showed here as hooks. The next button starts right after it (5 px for two windows, 8 for more, read from the picture). Before, it was squeezed to 6 px, so a stack of three or more ran its two edges together.
 - **Cost.** Nothing measurable: a redraw is still about 0.5 ms.
+### Shadows
+
+- **Under icons, under button frames, or both** (off by default), in any colour, with strength, softness (0 to 8 px) and offset. Each shape's shadow is blurred once and kept, found again by its pixels, so a changed icon gets its own.
+- A shadow falling on the bar's background falls on your colour scheme's tint (it's kept aside and laid over the tint at the end), not on the style's own background.
+- About 0.06 ms per redraw.
+
+### Hiding and fading
+
+- **Fade when idle** (off by default): after a set time away, the bar fades to a set opacity. Choose whether that happens always, only while nothing touches the bar, or only while a window does. The opacity rises as the pointer comes within a set distance, and anything that keeps the bar busy wakes it at once: a menu, its previews, a press, the Start menu, or (as set) a window wanting attention. Fade-out and wake times are separate. Only the compositor's opacity changes; the bar isn't drawn again for it.
+- **Automatic hiding:**
+  - A *reveal zone*: the bar comes back before the pointer reaches the very edge.
+  - It can come back for a window wanting attention.
+  - It can come back while the Start menu is open.
+
+### Tray
+
+- **Overflow arrow:** System Icons' green pixel arrow again, or the visual style's (b24 always took the style's).
+- **Tray icons, one click** (right-click the clock; they're first there, or right-click the bar):
+  - A running icon goes into the tray or back to the overflow with one click.
+  - *Not running now* lists every icon Windows has seen (the list its own settings page uses). Ticking one puts it in the tray the next time its program starts, without going through Windows' settings.
+  - The old per-icon choices are under *Where each goes*.
+
+### Previews your way, jump lists out of the way
+
+![Previews in Bouquet SAB's own look (top) and in colours set by hand, with a 2 px border, bigger thumbnails and more padding (bottom)](images/33-preview-looks.png)
+
+- **Preview look:** the visual style's (as before), or your own colours: background, titles, the pointed-at window and its border, the window in front, a window wanting attention, and the close button pointed at and its cross. Empty colours are the scheme's.
+- **Either look:**
+  - thumbnail width and height
+  - padding in each window
+  - padding to the border (also between windows)
+  - border colour (or none), and in your own look its width
+  - corners: square, slightly rounded or rounded
+  - a drop shadow
+  - a backdrop (blur, acrylic or Mica) behind a background of any opacity. A backdrop takes the place of the style's background picture.
+- **Jump lists and window menus:** at the pointer (as before), or beside the bar, lined up with the button's start or centre, moved away from the bar or along it by any number of pixels. The button's previews and tooltip close first either way.
+- **Show desktop with segments.** The button was only laid out on a bar without segments, so with segments on it was missing. It now sits at the end of the tray's segment, inside its island (with no tray shown, in an island of its own). Bouquet SAB draws it empty until it's pointed at, as StartAllBack does.
+- **The notification centre** stays on the taskbar's edge when it shrinks (after *Clear all*). A resizing flyout used to guess which edge to keep from whether its top was in the top half of the screen, and the notification centre is tall enough that it always is. It now remembers the edge it was placed against.
+### Explorer: navigation pane lines and gaps (Explorer Style)
+
+- **Hide the navigation pane's separator lines** and **Close the navigation pane's gaps**, both off by default. The idea is Languster's Explorer TreeLine Killer.
+  - Lines are found by their pixels: after the pane paints, any flat row across a group's row that isn't the background is painted over. So this doesn't depend on where Windows puts the line.
+  - Gaps close by making the groups' double-height rows single height; they're given back when switched off.
+  - Nothing is subclassed while both are off.
+- Not yet seen with Home, Gallery or pinned folders showing (the pane here shows only This PC).
+
+### Windows 11 26H2, and running without StartAllBack
+
+- 26H2 is an enablement package on the same files (this PC's 26200.9550 already has them). Nothing in the suite checks the build number, and its hooks match files that don't change. The only risk is StartAllBack needing an update for build 26300.
+- Research for replacing Windows' taskbar and Start without StartAllBack is in `research/disable-w11-shell.md`. It weighs m417z's Taskbar auto-hide fine tuning and Exiled Eye's Block Start Menu and Hosts. The plan: cloak the taskbar from inside Explorer, and take every Start opening through `XamlLauncher::ShowStartView`, which also retires the keyboard hook.
 ### Settings folded at first
 
 Windhawk 2.0 alpha 6 has no way for a mod to ask for folded groups. It remembers what you fold per mod id, and each build here has its own id, so every new build opens unfolded.
@@ -282,3 +332,88 @@ Windhawk 2.0 alpha 6 has no way for a mod to ask for folded groups. It remembers
 - A part that's off has no hooks: they're removed when the suite reloads. Where no part is on at all, the suite asks Windhawk to unload it from that program.
 - Where it is loaded, it costs about 75 KB of private memory per program, plus about 350 KB shared by all of them (the 3.3 MB DLL is mapped once).
 - Programs that can't be unloaded into (sandboxed browsers, suspended apps) keep an old build until they close.
+
+## b27: the Wi-Fi list comes back by itself
+
+- **Nearby networks were missing from the network flyout.** System Icons opened its connection to Windows' Wi-Fi service once, at start. After the service restarts (a Windows update, like the 26H2 one here, or waking from sleep), that connection goes dead, and every scan and list after it failed quietly. The flyout then showed only the current connection, which comes from somewhere else. It now opens the connection again whenever a call fails, and retries.
+- **Checked** with a new test program (`tools/sysicons/nettest.cpp`) that runs System Icons' own network code outside Windhawk, started as a plain desktop app: it lists the nearby networks (6 to 8 here).
+- **When Windows really does withhold the list:** since Windows 11 24H2, Windows may keep nearby networks from apps without location access. In that case the flyout now says so, with a link to Location settings, instead of *Looking for networks...*. It shows only when Windows actually refuses, or gives back nothing but the connected network while location is off. Here Windows gave the list without location access, so this is a fallback.
+
+## b28: the location question, explained and optional
+
+- **New setting in System Icons: Nearby Wi-Fi networks.** Its description explains why Windows may ask about location access (or list Windhawk under *Recently used* in its location settings) when the network flyout lists nearby networks. Windows counts that list as location data. The flyout itself only gets network names and signal strength.
+- **List them** is the default and works as before.
+- **List them, without the location note** keeps the list but never shows the "location access" message, for people who keep location off on purpose.
+- **Off** never asks Windows for nearby networks, so there's no scan and no location question. The Wi-Fi section then shows your current connection and a *Show available networks* link to Windows' own list.
+
+## b29: Windows' own taskbar and Start, switched off from inside Explorer; All Programs opens at once
+
+### Windows' taskbar and Start
+
+The suite's Explorer relay now turns Windows' own taskbar and Start away itself, the way the best Windhawk mods do it (m417z's Taskbar auto-hide fine tuning, whose symbol names this follows), but only for the suite's own bar. Every symbol was checked against this PC's Windows files (26100.9278, the 26H2 binaries) before building.
+
+- **Taskbar.** With "Hide StartAllBack's taskbar" on, Explorer's taskbars are **cloaked**: DWM draws nothing and they take no input, so there's no flash for a notification and no sliver at the screen's edge. Explorer uncloaks its taskbar by itself as it redraws, so that one call is turned away (`DwmSetWindowAttribute`, only for the taskbar windows). Its unhide (`TrayUI::Unhide`, `CSecondaryTray::_Unhide`) is dropped too, so it doesn't even animate. A new screen's taskbar is cloaked a moment after the screen appears.
+- **The old 500 ms check** that re-hid the taskbar now looks in every 5 seconds while the taskbar is cloaked, just to catch an Explorer restart.
+- **Safety.** If the suite's bar ends for any reason, a crash included, Explorer's relay notices at once (it waits on the bar's process) and puts Windows' taskbar back, so there's always a taskbar.
+- **Start.** Without StartAllBack, Explorer hands every opening of Windows' Start (`XamlLauncher::ShowStartView`) to the suite's Start: the Windows key, Ctrl+Esc, or anything else. Then the low-level keyboard hook switches itself off, so no key press on the system passes through the bar any more. With StartAllBack loaded nothing changes: it keeps the key, and the keyboard hook stays.
+- **Cost:** nothing between events. The hooks only run when Explorer tries to show its taskbar or Start.
+- **Not tried live yet:** it needs StartAllBack switched off and Explorer restarted.
+
+### All Programs
+
+- **Measured** with a new test-bar check (`TB_perf=all`): pressing All programs cost about 340 ms, and 700 ms the first time. Two causes:
+  - The program list was thrown away on every Start open and read again, asking the shell for each entry's display name (about 1.3 ms each, 81 entries here).
+  - The icons were made on the menu's own thread as it painted.
+- **Now** the idle warm-up that already fetched the home list's icons also fetches All Programs' top-level names and icons, and the apps' icons, on its own thread while the menu is closed. The names are kept from one open to the next.
+- **Result:** pressing All programs takes **1.6 ms** after the warm-up, and 0.8 ms on later opens. Start's own open is unchanged (29.8 ms first, 7.2 ms after).
+
+## b30: no more "Initializing..." when Windhawk opens
+
+- **What you saw:** every time Windhawk was opened, a window listed the suite as *Initializing...* in a windhawk.exe process.
+- **Why:** each windhawk.exe loads the suite's launcher, both Windhawk's tray process and the one started when you open Windhawk. Each launcher started the suite's tool process (the taskbar and System Icons). With one already running, the second sat in its start-up for up to 5 seconds, waiting for the first to go, and then gave up. Windhawk showed that wait as a mod still initializing.
+- **Now** the launcher only starts a tool process when none is running. It waits for one on a thread of its own, since after a settings change the old one is on its way out and gone within moments. One still there after a few seconds is running for good, so it's left alone. The tool process itself now gives up after 1 second instead of 5, for the rare race.
+
+## b31: Wi-Fi connects again; tray menus close on a click away and can open clear of the taskbar
+
+- **CONNECT and DISCONNECT did nothing in the network flyout.** The button sits inside its network's row, and a click went to whatever was listed first under the pointer, which was the row. So each click just folded the row up again. A click now goes to the smallest target under the pointer, so the button wins over its row, whichever order a flyout lists them in. Bluetooth's CONNECT had the same fault and is fixed with it.
+- **A tray icon's right-click menu wouldn't close on a click elsewhere.** Windows closes a menu on an outside click only when the menu's window is in front, which a click on the Tourne taskbar (which never takes the focus) doesn't always leave it. While a menu is up, a mouse hook now closes it on any click outside it, and swallows that click as Windows' own menus do, so a click on the same icon doesn't reopen it. The hook exists only while a menu is open.
+- **New System Icons settings for where things open:**
+  - *Where the icons' right-click menus open*: at the pointer (as before), or clear of the taskbar, next to the icon, on whichever edge the taskbar is.
+  - *Menu lined up with the icon*: starting at it, centred on it, or ending at it.
+  - Distance from the taskbar and shift along it, in pixels, for both the menus and the flyouts. The flyouts' distance is added to their usual 8 px.
+  - All default to how things were.
+
+## b32: flyouts and menus stay on their own screen
+
+- **Flyouts** are kept inside the work area of the screen their icon is on, both when they open and when they grow while open (the notification centre, a network list). They're moved back in, and are never taller or wider than that screen.
+- **Every menu in the suite** (the taskbar's, Start's, System Icons') goes through one place that keeps it on one screen. That's the screen of whatever opened it, or else the screen under its point. A point on or past the screen's edge is brought back inside.
+- **A menu doesn't cover what opened it.** Windows is told what to keep clear of, and when there's no room on one side it shows the menu on the other:
+  - A menu opened from inside a flyout (an icon in the hidden icons flyout) opens beside the flyout, on the side toward the middle of the screen, and on the other side if there's no room.
+  - Tray menus set to open clear of the taskbar, and jump lists placed by their button, stay off the taskbar.
+- **Other programs' own menus** (an app's tray icon in the hidden icons flyout) are drawn by those programs, so they open where the program puts them.
+
+## b33: the hidden icons flyout's own menu
+
+A right click on the open part of the hidden icons flyout (off its icons) now opens its own menu, beside the flyout:
+- **Show on the taskbar**: pick an icon and it moves into the taskbar's tray.
+- **Take out of the taskbar and here**: pick an icon and it shows in neither the taskbar nor this flyout.
+- **Show them all on the taskbar**: every icon in the flyout moves at once.
+- **Bring back here**: icons taken out, listed with *not running* for programs that are closed. Pick one and it's back in the flyout.
+
+Icons are listed by their tooltip and program. The choices are kept where the taskbar reads them too, so it updates at once. The flyout stays open under the menu and takes the focus back afterwards, so a click away still closes it. A right click on an icon still opens that program's own menu.
+
+## b34: new calendar events, through Google Calendar
+
+**Right-click a day to add an event (Google Calendar, online)** is a new System Icons setting, off by default. A right click on a day in the notification centre's calendar opens a small window:
+- Title, the day, all day or a time from and to, where, importance (Low, Normal, High) and notes.
+- Times can be typed as `9`, `9:30`, `0930`, `9pm`, `9:30 am` or `21:15`. An end before the start runs past midnight.
+- Tab, Enter and Escape work as in a dialog.
+
+![The new event window](images/34-new-event.png)
+
+**Add to Google Calendar** opens Google Calendar's own new-event page in the browser with everything filled in, and one click there saves it. The event then reaches every device, and this agenda the next time it reads the calendar.
+- The times are sent as UTC, so the event lands at the right time whatever time zone Google's calendar is set to.
+- Google has no importance field: High puts "!" before the title, and Low or High is written in the notes. Tasks can't be made this way, because Google Tasks has no such page.
+- **Why it's online, as the setting says:** Google Calendar itself saves the event, in a browser signed in to your account. The suite only opens that page. It sends nothing itself and keeps no account, key or password.
+
+Checked outside Windhawk (`tools/sysicons/evtest.cpp`): the time parsing, 14:30 local on 3 October 2026 becoming `20261003T183000Z`, the link's encoding (`Dentist & café` becomes `Dentist%20%26%20caf%C3%A9`), and the window as drawn.
