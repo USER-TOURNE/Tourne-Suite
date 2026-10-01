@@ -593,3 +593,12 @@ The ask: find out why Explorer kept crashing and why the tooltips flickered (fro
 - Sliding along the marks swaps the preview at once. Clicking, dragging, the menu or leaving the pager closes it.
 - Nothing runs while no preview is open.
 - Two new settings under "Desktops pager look": the previews themselves (on) and their width (280 px at 100%). With previews on, the mark's tooltip steps aside, since the preview names the desktop.
+
+## Tester kit
+
+**A copy for anyone to try.** A clean build of the suite in its own folder, with nothing from my PC in it. On a tester's PC it fills itself in from their own setup, and it can put everything back.
+- No paths, colours, devices or apps of mine. Colours follow the tester's own visual style. The parts that restyle Windows to one person's taste (green text, menus without icons, classic menus) start off for them to try.
+- **Back up first:** records every Windows setting the suite is able to change before it's installed.
+- **Fill in my settings:** reads the tester's tweaks, StartAllBack, taskbar layout, Resource Redirect icon theme and rules, and battery devices into the suite, and installs the pixel fonts.
+- **Reset my PC to before:** puts it all back, takes away anything the suite added, and names the few boot and account tweaks it can't read without admin.
+- A START HERE guide covers installing, applying, using and resetting, with a notes sheet for feedback.
