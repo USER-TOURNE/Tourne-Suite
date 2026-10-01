@@ -417,3 +417,32 @@ Icons are listed by their tooltip and program. The choices are kept where the ta
 - **Why it's online, as the setting says:** Google Calendar itself saves the event, in a browser signed in to your account. The suite only opens that page. It sends nothing itself and keeps no account, key or password.
 
 Checked outside Windhawk (`tools/sysicons/evtest.cpp`): the time parsing, 14:30 local on 3 October 2026 becoming `20261003T183000Z`, the link's encoding (`Dentist & café` becomes `Dentist%20%26%20caf%C3%A9`), and the window as drawn.
+
+## b35: testing the preview pane's sizer
+
+With StartAllBack off, Explorer's side pane could be dragged wider but never back narrower than the width it opened at. b35 added test-only layouts behind a hidden switch, to rule the layout in or out, and `tools/navpane/Test-PreviewPane.ps1` to drag the pane in a folder window of its own (it posts mouse messages, so the pointer isn't touched, and Explorer's saved pane sizes are put back after).
+- Every layout tried behaved the same, ours and StartAllBack's own: StartAllBack's DLL still loads into Explorer while it's switched off, and its details-on-the-bottom layout wins over ours.
+- With StartAllBack running in the test window, the pane shrank normally. So the limit isn't the layout but Windows' sizer code in shell32, which StartAllBack patches.
+
+Also from b35: the user's b33 settings were saved as `settings/tourne-suite-b33-settings.reg` for future builds.
+
+## b36: choosing the Google account for new events
+
+**Google accounts for new events** (System Icons) takes your calendar's email, or several separated by commas. The event window gets an Account row, which cycles through them on a click, and Google's page opens as that account (`authuser=`). This matters when the browser's default Google account isn't the calendar's. That account has to be signed in to the browser.
+
+b36 also tried two fixes for the pane, still as tests. Neither worked live, which b37 explains.
+
+## b37: side panes shrink again, and resized windows stay where you put them
+
+**The pane fix.** A small test DLL, loaded only into a test folder window, logged every call to shell32's `CDUISizerElement::_ComputeBoundedSize` (its disassembly came from Windhawk's own LLVM DLL, as this PC has no disassembler). It showed:
+- b36's hook was installed and running, but only looked for the old preview pane (ReadingPane). The pane being dragged is Windows 11's combined details and preview pane, DetailsContainer.
+- That sizer's MinSize is set to the width the pane opened at (277 px here), and the clamp held every smaller size at 277.
+- Letting that floor go in the test DLL let the pane shrink the full 100 px, twice.
+
+Explorer Style now does the same for both panes, only when the minimum is what holds the pane, and never below 100 px. The test layouts are gone. `tools/navpane/Probe-Sizer.ps1` keeps the probe for next time.
+
+**The window manager.** A tiled window you resize by hand now leaves the tiling instead of snapping back, and stays floating where you put it.
+- Its place is remembered for that program (file name and window class) and saved, so the program's next window opens there, also after a restart. One window at a time holds a program's place, so a second window is tiled as usual.
+- Moving a kept window updates its place. Shift+W+Space puts it back in the tiling and forgets the place.
+- It works with automatic tiling off too, so Shift+W+Tab doesn't pull it back either. Dragging a tiled window without resizing it still swaps it with the one it's dropped on.
+- New setting under Window tiling: **Leave a window you resize where you put it**, on.
