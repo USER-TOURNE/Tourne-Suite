@@ -1,4 +1,4 @@
-# Devlog: our own taskbar, builds b8 to b19
+# Devlog: our own taskbar, builds b8 to b51
 
 Two days (2026-09-28 and 09-29) spent turning the test-mode taskbar into a 1:1 stand-in for StartAllBack (SAB). The bar and Start menu are drawn straight from SAB's `.msstyles`, so a theme made for SAB should look the same in both. Every change below was checked against SAB side by side where that was possible.
 
@@ -602,3 +602,99 @@ The ask: find out why Explorer kept crashing and why the tooltips flickered (fro
 - **Fill in my settings:** reads the tester's tweaks, StartAllBack, taskbar layout, Resource Redirect icon theme and rules, and battery devices into the suite, and installs the pixel fonts.
 - **Reset my PC to before:** puts it all back, takes away anything the suite added, and names the few boot and account tweaks it can't read without admin.
 - A START HERE guide covers installing, applying, using and resetting, with a notes sheet for feedback.
+
+## b44 to b47: hunting the extract crash
+
+The ask: Explorer still crashed with StartAllBack off. It failed fast in Windows.UI.Xaml (0xc000027b), and it could be made to happen on demand by extracting an archive.
+
+**Three wrong turns first.** Each was its own test build, and each was taken back out:
+- **b44** kept StartAllBack loaded and hid its classic taskbar instead. Explorer stopped crashing, but there were two taskbars, and StartAllBack being off was the whole point.
+- **b45** made one more of the relay's messages wait (`SMTO_BLOCK`). The crash didn't care.
+- **b46** had test switches to turn the relay's hooks off one by one. With all of them off it still crashed, so the hooks weren't the cause.
+
+**The crash dumps.** Read with Microsoft's symbols for Windows.UI.Xaml, Taskbar.View and WinUI 2:
+- The hidden Windows 11 taskbar still builds a task button for every window. Extracting an archive reports progress on its window, so that button builds a WinUI 2 progress bar.
+- The progress bar's template asks WinUI 2 for `ProgressBarTemplateSettings` by name. WinUI 2 doesn't make that class by name, so the request fails (`0x80040111`, "class not available").
+- Its next animation then fails (`0x80070490`), and `VisualStateManager.GoToState` takes Explorer down.
+- Nothing about the hiding causes it. Any progress shown on a hidden XAML taskbar does.
+
+**b47: the fix.** Your idea: just don't let the progress through. The relay already listens to the task list window (`MSTaskSwWClass`) for app progress, to show it on our buttons. While Windows 11's taskbar is kept hidden, that progress now stops there instead of going on to Explorer. Our taskbar still shows it. Once hiding ends, the next update reaches Explorer as before.
+
+Extracting, copying and downloads no longer crash Explorer with StartAllBack off.
+
+## b48: a design for any program's tray icon
+
+The ask: a program (Recordly) had lost the little screenshot icon the tray used to give it. Can that icon be used for other programs too?
+
+- A Button icons row can now name one of System Icons' designs instead of an `.ico`: `tourne:screenshot`, `tourne:chat`, `tourne:cloud` and so on.
+- In the tray, the program's own icon is replaced by that design, in the colour scheme, at every size.
+- The names: screenshot, capture, chat, cloud, game, audio, claude, spotify, wallpaper, fan, tiling, gpu, sensor, bell, clipboard, bin, phone, printer, usb, keyboard, power, mic, vpn, update. They're listed in the Icon field's description too.
+
+## b49: designs everywhere, and a kit that's anyone's
+
+- **Designs on buttons and in Alt+Tab.** A `tourne:` row now also gives the program's taskbar buttons and its Alt+Tab entry the design, with no "Use everywhere" needed. The button needs the Taskbar part on, Alt+Tab the Switcher.
+- **The kit's defaults are neutral.** A tester's build takes each part's own defaults, but three of those were one person's taste. Now a kit starts with:
+  - the colour scheme following the taskbar's style,
+  - no names in Menu No Duplicates,
+  - Menu No Icons on `explorer.exe`, `dllhost.exe` and `rundll32.exe` only.
+- The kit's notes sheet names the right step ("3. Fill in my settings").
+
+## Off the suite: green arrows, and a restore
+
+- **Green Start menu arrows.** The arrows beside the Start menu's places are images in the style (StartPanelPriv's FLYOUTARROW, which Bouquet SAB shares with PINICON). `tools/msstyles/Set-GreenStartArrows.ps1` makes a copy of the style with our pixel chevron drawn in at each image's size, in `%LOCALAPPDATA%\Tourne\Styles`.
+- **Green menu arrows.** StartAllBack's flyouts and every classic menu draw Windows' own submenu arrow (Menu's POPUPSUBMENU, a normal and a disabled arrow in one image). `tools/msstyles/Set-GreenMenuArrows.ps1` makes a copy of the Windows style with the chevron in both, the disabled one faded, and a `.theme` to apply it.
+- **A reset.** A crash outside the suite ended with a System Restore, which took the newest settings with it. The b48 settings in `builds\` were renamed for b50 and imported back. That's one more reason everything now lives in git.
+
+## Research: how StartAllBack stays stable
+
+With StartAllBack on, nothing crashes. Why?
+- StartAllBack never lets Windows 11's XAML taskbar exist. The suite kept it alive and hidden, and every crash so far came from that hidden XAML running.
+- ExplorerPatcher, which is open source, shows how: Explorer creates its taskbar through one component (`TrayUIComponent`). ExplorerPatcher answers that request with a classic taskbar of its own.
+- Since 24H2 the classic taskbar isn't in Explorer any more. ExplorerPatcher ships its own rebuilt one, as a compiled DLL only.
+- On 25H2, `Taskbar.dll` loads each taskbar's XAML content through two functions (`TaskbarHost::TryLoadTaskbarFrameFromController` and `TryLoadTaskbarFrameFromXamlExtension`). If neither loads anything, Explorer itself unsubscribes that taskbar's events and carries on with the bare window. That's a path Microsoft built, which gave b50 its idea.
+- An app instead of a mod wouldn't help: whatever stops Windows' taskbar has to run inside Explorer either way.
+
+## b50: Windows' taskbar without its content (a test)
+
+**A new setting, "Don't load Windows' taskbar (test)", off by default.** With it on, together with "Hide StartAllBack's taskbar" and StartAllBack off:
+- The relay makes both of those loaders report that nothing loaded, as Explorer starts.
+- Windows 11's taskbar window is still made, and still hidden, but its buttons, tray and progress bars never exist, so none of them can fail hidden.
+- It's hooked in init, before Explorer builds its taskbars, so a change takes effect when Explorer restarts. The crash guard still turns the suite off if Explorer loops.
+
+The first b50 didn't compile: `Wh_Log` is a macro that pastes its message onto a string literal, so it can't take a choice between two strings. The syntax checks had been run in Windhawk's editor mode, where `Wh_Log` is an ordinary function. They now run in real compile mode, which shows that error.
+
+## b51: renaming desktops, and your own desktop keys
+
+The ask: change a desktop's name with a middle click on the pager, and choose the keys that switch desktops.
+
+**Renaming.** A middle click on a mark, docked or floating, or "Rename" in its menu, opens a box with the desktop's name. Enter keeps it, Esc or clicking away leaves it, and an empty name goes back to "Desktop N".
+- The name is set through Windows' own desktop manager, the one Task view uses (`IVirtualDesktopManagerInternal`), so Task view shows it at once.
+- That interface is undocumented and changes between builds. Its id and the slots used (switch 9, find 14, set name 16) were read from 24H2/25H2's `twinui.pcshell.dll` and its symbols. On another build the id doesn't answer, and nothing is called.
+
+**Desktop keys** (in the taskbar settings, empty by default):
+- Next desktop and Previous desktop, with Windhawk's hotkey picker.
+- Go to desktop 1 to 9: Alt, Ctrl+Alt, Shift+Alt or Win+Alt with a number key.
+- They switch through the same manager, so the keys still held don't get mixed into sent ones. Where the manager doesn't answer, they fall back to Ctrl+Win+Left or Right, as a click does.
+- Windows' own Ctrl+Win+arrows keep working.
+
+The Hide/show hotkey now shares their reading. Each setting's name is still written out where it's read, because that's where the build adds the part's prefix.
+
+**Known limits:** not tried on a real PC yet.
+
+## The b51 kit
+
+A tester got "Failed to parse settings: instance[0].trayIcons[1].icons has an unsupported value type".
+- A tester's build has no tray icon or folder rows of its own, so those two lists were written with nothing under them. Windhawk refuses the whole settings block for that.
+- With no rows, the build now writes one empty row, as the other lists already did. Both parts skip an empty row.
+- Kits are now checked by parsing their settings block, not just by reading their defaults.
+
+## Bonsai: a cbonsai screensaver
+
+Not part of the suite, but kept with it in `bonsai/` after the reset lost the first copy. `build.bat` compiles both with the C# compiler built into Windows.
+
+- **BonsaiSaver.scr** grows a tree on each screen (or the main one only), holds it, then grows the next. Scientifica is built in, drawn at its own 5 x 11 pixels and enlarged by whole pixels, so it stays sharp. Twelve trees are grown off screen and the one that fills the screen best is shown.
+- **bonsai.exe** grows the same trees in a terminal, with cbonsai's options (`-l -i`, `-p`, `-m`, `-S classic`).
+- **Classic** is cbonsai's growth ported step for step. **Detailed** adds more side branches, a trunk that tapers from a root flare, and shaded leaf clouds lit from above.
+- Its colours default to the palette: trunk #a95d5d lit #ff8f8f, leaves #64aa89 lit #15ffa2 with #6ba6a0 undersides, background #121c21. Every colour, and the tree's style and size, are in its settings.
+
+**Known limits:** at 1080p a big tree only enlarges 2x, so it fills the height but not the width; a lower Life lets it go to 3x.
